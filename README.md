@@ -66,8 +66,8 @@ Filled in as each stage completes. Numbers are produced by `evals/run_evals.py`.
 
 | stage | capability | measure | result |
 | --- | --- | --- | --- |
-| 01 | ingest and chunk | chunks per document, max chunk size | not yet measured |
-| 02 | lexical retrieval | recall@5 | not yet measured |
+| 01 | ingest and chunk | 22 documents to 362 citable chunks | done |
+| 02 | lexical retrieval | recall@5, MRR | **66.7%**, 0.536 |
 | 03 | query expansion and ranking | recall@5, MRR | not yet measured |
 | 04 | hybrid retrieval | recall@5 on paraphrased questions | not yet measured |
 | 05 | packing and citation | context tokens, citation precision | not yet measured |

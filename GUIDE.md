@@ -32,7 +32,7 @@ the thing.
 | stage | you build | the idea it teaches | ends with |
 | --- | --- | --- | --- |
 | 01 | document loader and chunker | text has structure, and structure is what makes retrieval work | 22 documents into stable, citable chunks |
-| 02 | lexical index and BM25 | a word in two documents is worth more than a word in thirty | recall@5 on 40 golden questions |
+| 02 | lexical index and BM25 | a word in two documents is worth more than a word in thirty | recall@5 on 24 golden questions |
 | 03 | query expansion and ranking | query language is not document language | better first-hit, less ranking drift |
 | 04 | dense retrieval and fusion | lexical match fails on paraphrase; vectors fail on exact terms | hybrid recall on paraphrased questions |
 | 05 | context packing with citations | a context window is a budget | answers that cite section, not just document |
