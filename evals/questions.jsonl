@@ -1,4 +1,4 @@
-{"id": "q01", "question": "How do I return HTML instead of JSON from an endpoint?", "gold_doc": "advanced/custom-response.md", "gold_phrase": "will return JSON responses"}
+{"id": "q01", "question": "How do I return HTML instead of JSON from an endpoint?", "gold_doc": "advanced/custom-response.md", "gold_phrase": "HTMLResponse"}
 {"id": "q02", "question": "How do I stream a file as the response?", "gold_doc": "advanced/custom-response.md", "gold_phrase": "Asynchronously streams a file"}
 {"id": "q03", "question": "How do I run code once before the application starts receiving requests?", "gold_doc": "advanced/events.md", "gold_phrase": "before the application"}
 {"id": "q04", "question": "How do I add my own middleware to the application?", "gold_doc": "advanced/middleware.md", "gold_phrase": "Custom Middleware"}

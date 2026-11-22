@@ -33,7 +33,7 @@ the thing.
 | --- | --- | --- | --- |
 | 01 | document loader and chunker | text has structure, and structure is what makes retrieval work | 22 documents into stable, citable chunks |
 | 02 | lexical index and BM25 | a word in two documents is worth more than a word in thirty | recall@5 on 24 golden questions |
-| 03 | query expansion and ranking | query language is not document language | better first-hit, less ranking drift |
+| 03 | text analysis and tokenisation | questions and documents spell the same idea differently | recall@5 from 67% to 83% |
 | 04 | dense retrieval and fusion | lexical match fails on paraphrase; vectors fail on exact terms | hybrid recall on paraphrased questions |
 | 05 | context packing with citations | a context window is a budget | answers that cite section, not just document |
 | 06 | grounding checks and refusal | an answer without support is a guess that reads like a fact | measured false-answer rate |
@@ -51,8 +51,9 @@ This is the bar. If you cannot say the sentence, the stage is not done.
 normalises for document length. Recall@5 is the fraction of questions whose correct
 section appears in the top five."
 
-**After 03:** "Query expansion closes the vocabulary gap. I measured it, and it
-bought 9 points of recall, which I can attribute to aliases rather than to luck."
+**After 03:** "Identifier splitting and stemming took recall@5 from 67% to 83%. I
+also tested heading weighting and it did nothing, which I reported rather than quietly
+kept."
 
 **After 04:** "Hybrid retrieval exists because lexical search misses paraphrase and
 dense search misses exact identifiers. Reciprocal rank fusion combines them without

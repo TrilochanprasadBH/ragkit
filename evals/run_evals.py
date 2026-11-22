@@ -34,7 +34,6 @@ IMPL = os.environ.get("IMPL", "src")
 sys.path.insert(0, str(ROOT / IMPL))
 
 from ragkit.ingest import chunk_corpus  # noqa: E402
-from ragkit.lexical import build_index  # noqa: E402
 
 CORPUS = ROOT / "corpus" / "fastapi"
 QUESTIONS = ROOT / "evals" / "questions.jsonl"
@@ -51,11 +50,25 @@ def load_questions() -> list[dict]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--k", type=int, default=5)
+    parser.add_argument(
+        "--index",
+        choices=("lexical", "fielded"),
+        default="lexical",
+        help="lexical is stage 02's BM25; fielded is stage 03's, with pluggable tokenisation",
+    )
     parser.add_argument("--show-failures", type=int, default=5)
     args = parser.parse_args()
 
     chunks = chunk_corpus(CORPUS)
-    index = build_index(chunks)
+
+    if args.index == "fielded":
+        from ragkit.fielded import build_fielded_index
+
+        index = build_fielded_index(chunks)
+    else:
+        from ragkit.lexical import build_index
+
+        index = build_index(chunks)
     questions = load_questions()
 
     by_phrase = {q["id"]: q for q in questions}
@@ -98,6 +111,7 @@ def main() -> int:
 
     print()
     print(f" implementation  {IMPL}")
+    print(f" index           {args.index}")
     print(f" chunks          {len(chunks)}")
     print(f" questions       {scored} scored, {len(broken)} broken labels")
     print(f" recall@{args.k}       {recall:.1%}")
