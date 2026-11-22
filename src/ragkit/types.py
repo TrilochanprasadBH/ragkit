@@ -37,3 +37,23 @@ class Chunk:
         if self.headings:
             return f"{self.source} > " + " > ".join(self.headings)
         return self.source
+
+@dataclass(frozen=True)
+class Citation:
+    """One numbered source in a pack."""
+
+    number: int
+    chunk_id: str
+    label: str
+
+
+@dataclass(frozen=True)
+class Pack:
+    """A bounded context window, with every passage attributable to a source."""
+
+    text: str
+    citations: tuple[Citation, ...]
+    tokens: int
+
+    def is_empty(self) -> bool:
+        return not self.citations
