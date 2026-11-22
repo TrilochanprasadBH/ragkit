@@ -102,6 +102,21 @@ chunk at structure, and rerank last.
 **In this project.** Directly responsible for the heading experiment in stage 03, which
 found no effect on this corpus. Reported as a null result instead of quietly dropped.
 
+### 5b. Pin the embedding model — practitioner guide (2026)
+
+**Source.** learnaiengineering.dev, "Production RAG architecture: a practical guide"
+
+**What they did.** Recorded the embedding model version with every vector, on the
+grounds that queries and documents must be embedded by the same model and that
+swapping models means re-embedding the whole corpus.
+
+**What it means.** A vector index has a schema, and the model is part of it. Treating
+it as an implementation detail is how teams end up with a quietly broken index after an
+upgrade.
+
+**In this project.** The dense index is rebuilt on every run, so the problem cannot
+bite yet. Stage 08 writes the embedder name into the index metadata so that it could.
+
 ---
 
 ## Agents

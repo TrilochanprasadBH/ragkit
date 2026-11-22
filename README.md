@@ -69,7 +69,7 @@ Filled in as each stage completes. Numbers are produced by `evals/run_evals.py`.
 | 01 | ingest and chunk | 22 documents to 362 citable chunks | done |
 | 02 | lexical retrieval | recall@5, MRR | **66.7%**, 0.536 |
 | 03 | text analysis | recall@5, MRR | **83.3%**, 0.668 |
-| 04 | hybrid retrieval | recall@5 on paraphrased questions | not yet measured |
+| 04 | dense retrieval and fusion | recall@5, MRR | **87.5%**, 0.688 |
 | 05 | packing and citation | context tokens, citation precision | not yet measured |
 | 06 | grounding and refusal | answer accuracy, false answer rate | not yet measured |
 | 07 | eval suite | full report with confidence intervals | not yet measured |

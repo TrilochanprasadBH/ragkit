@@ -34,7 +34,7 @@ the thing.
 | 01 | document loader and chunker | text has structure, and structure is what makes retrieval work | 22 documents into stable, citable chunks |
 | 02 | lexical index and BM25 | a word in two documents is worth more than a word in thirty | recall@5 on 24 golden questions |
 | 03 | text analysis and tokenisation | questions and documents spell the same idea differently | recall@5 from 67% to 83% |
-| 04 | dense retrieval and fusion | lexical match fails on paraphrase; vectors fail on exact terms | hybrid recall on paraphrased questions |
+| 04 | dense retrieval and rank fusion | lexical fails on paraphrase; vectors fail on exact terms | hybrid recall@5 from 83% to 88% |
 | 05 | context packing with citations | a context window is a budget | answers that cite section, not just document |
 | 06 | grounding checks and refusal | an answer without support is a guess that reads like a fact | measured false-answer rate |
 | 07 | the eval suite | a number without an interval is a rumour | a report you can defend |
@@ -56,8 +56,8 @@ also tested heading weighting and it did nothing, which I reported rather than q
 kept."
 
 **After 04:** "Hybrid retrieval exists because lexical search misses paraphrase and
-dense search misses exact identifiers. Reciprocal rank fusion combines them without
-tuning a weight."
+dense search misses exact terms. I fused by rank, not score, and measured that a weak
+embedding made the system worse than lexical alone."
 
 **After 05:** "Packing is a covering problem. I select documents to cover the
 question inside a token budget, not to maximise individual relevance."

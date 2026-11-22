@@ -52,11 +52,17 @@ def main() -> int:
     parser.add_argument("--k", type=int, default=5)
     parser.add_argument(
         "--index",
-        choices=("lexical", "fielded"),
+        choices=("lexical", "fielded", "dense", "hybrid"),
         default="lexical",
         help="lexical is stage 02's BM25; fielded is stage 03's, with pluggable tokenisation",
     )
     parser.add_argument("--show-failures", type=int, default=5)
+    parser.add_argument(
+        "--embedder",
+        choices=("char-ngram", "hashing", "remote"),
+        default="char-ngram",
+        help="embedder used by the dense and hybrid indexes",
+    )
     args = parser.parse_args()
 
     chunks = chunk_corpus(CORPUS)
@@ -65,6 +71,17 @@ def main() -> int:
         from ragkit.fielded import build_fielded_index
 
         index = build_fielded_index(chunks)
+    elif args.index in ("dense", "hybrid"):
+        from ragkit.dense import DenseIndex, HybridIndex
+        from ragkit.embeddings import build_embedder
+        from ragkit.fielded import build_fielded_index
+
+        embedder = build_embedder(args.embedder)
+        dense = DenseIndex(chunks, embedder)
+        if args.index == "dense":
+            index = dense
+        else:
+            index = HybridIndex(build_fielded_index(chunks), dense)
     else:
         from ragkit.lexical import build_index
 
