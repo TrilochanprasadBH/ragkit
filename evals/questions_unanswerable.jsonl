@@ -1,0 +1,12 @@
+{"id": "u01", "question": "How do I configure Terraform state locking with an S3 backend?"}
+{"id": "u02", "question": "What is the retry policy for a Kafka consumer group?"}
+{"id": "u03", "question": "How do I write a Helm chart for a Redis cluster?"}
+{"id": "u04", "question": "What is the default transaction isolation level in PostgreSQL?"}
+{"id": "u05", "question": "How do I configure Nginx as a reverse proxy for gRPC?"}
+{"id": "u06", "question": "How do I shard an Elasticsearch index by tenant?"}
+{"id": "u07", "question": "How do I set up Prometheus alerting on GPU memory?"}
+{"id": "u08", "question": "How do I configure Rails ActiveRecord connection pooling?"}
+{"id": "u09", "question": "What is the syntax for a Kubernetes NetworkPolicy?"}
+{"id": "u10", "question": "How do I implement the OAuth2 device flow for smart TVs?"}
+{"id": "u11", "question": "How do I use WebSockets with Spring Boot?"}
+{"id": "u12", "question": "How do I mount a Ceph volume into a Nomad job?"}

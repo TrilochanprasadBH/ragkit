@@ -1,23 +1,28 @@
 #!/usr/bin/env python3
-"""End-to-end QA evaluation: retrieval, packing, answering, citation.
+"""End-to-end evaluation: retrieval, packing, gating, answering, citation.
 
     IMPL=reference python evals/run_qa_eval.py
-    python evals/run_qa_eval.py --packer naive
-    python evals/run_qa_eval.py --budget 200 --show-failures 5
+    IMPL=reference python evals/run_qa_eval.py --sweep
+    python evals/run_qa_eval.py --min-sufficiency 0.6 --show-failures 5
 
-Four numbers, and they measure different things.
+Two question sets are evaluated together.
 
-  retention    the gold evidence survived packing. This is retrieval plus packing.
-  answer       the returned sentence contains the gold phrase. This is the reader
-               working with what it was given.
-  citation     when an answer was given, the cited passage really contained the
-               evidence. A correct answer with a wrong citation is not a result.
-  refusals     the system declined to answer. On this golden set every question has
-               an answer, so every refusal is a false refusal.
+  answerable    (evals/questions.jsonl) questions the corpus can answer
+  unanswerable  (evals/questions_unanswerable.jsonl) questions about technology this
+                corpus never mentions
 
-Splitting these apart is the point. A drop in `answer` with `retention` intact means
-the reader failed, not the retriever. A drop in both means retrieval or packing broke.
-One number would hide that distinction.
+That split is what makes the gate measurable. Without unanswerable questions, a system
+that answers everything looks perfect.
+
+Four numbers:
+
+  false refusals   declined a question that had an answer. Annoying.
+  false answers    answered a question that had no answer in the corpus. Dangerous.
+  answer accuracy  on answerable questions, the answer contains the gold evidence.
+  citation         the cited passage is one that contains the evidence.
+
+The two error types are reported separately on purpose: they cost different things,
+and a single accuracy number would hide which one you are buying.
 """
 
 from __future__ import annotations
@@ -32,95 +37,154 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 IMPL = os.environ.get("IMPL", "src")
 sys.path.insert(0, str(ROOT / IMPL))
 
-from ragkit.answer import answer as read  # noqa: E402
+from ragkit.baselines import pack_whole_chunks  # noqa: E402
 from ragkit.dense import DenseIndex, HybridIndex  # noqa: E402
 from ragkit.embeddings import build_embedder  # noqa: E402
 from ragkit.fielded import build_fielded_index  # noqa: E402
+from ragkit.grounding import Grounder  # noqa: E402
 from ragkit.ingest import chunk_corpus  # noqa: E402
 from ragkit.pack import pack as pack_sentences  # noqa: E402
-from ragkit.pack import pack_whole_chunks  # noqa: E402
 
 CORPUS = ROOT / "corpus" / "fastapi"
-QUESTIONS = ROOT / "evals" / "questions.jsonl"
+ANSWERABLE = ROOT / "evals" / "questions.jsonl"
+UNANSWERABLE = ROOT / "evals" / "questions_unanswerable.jsonl"
+
+
+def load(path: pathlib.Path) -> list[dict]:
+    return [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
+
+
+def build():
+    chunks = chunk_corpus(CORPUS)
+    by_id = {chunk.chunk_id: chunk for chunk in chunks}
+    lexical = build_fielded_index(chunks)
+    dense = DenseIndex(chunks, build_embedder("char-ngram"))
+    return chunks, by_id, HybridIndex(lexical, dense)
+
+
+def evaluate(packer, retriever, by_id, grounder, questions, budget, k=5):
+    """Return per-question outcomes."""
+    outcomes = []
+    for question in questions:
+        hits = retriever.search(question["question"], k=k)
+        docs = [by_id[chunk_id] for chunk_id, _ in hits]
+        packed = packer(question["question"], docs, budget=budget)
+        result = grounder.answer(question["question"], packed.text)
+
+        cited_chunk = next(
+            (c for c in packed.citations if c.number == result.citation), None
+        )
+        outcomes.append(
+            {
+                "id": question["id"],
+                "question": question["question"],
+                "grounded": result.grounded,
+                "text": result.text,
+                "packed": packed,
+                "cited": cited_chunk.chunk_id if cited_chunk else None,
+            }
+        )
+    return outcomes
 
 
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--budget", type=int, default=180)
     parser.add_argument("--packer", choices=("sentences", "naive"), default="sentences")
-    parser.add_argument("--retrieve", type=int, default=5)
-    parser.add_argument("--show-failures", type=int, default=5)
+    parser.add_argument("--min-sufficiency", type=float, default=0.5)
+    parser.add_argument("--sweep", action="store_true")
+    parser.add_argument("--show-failures", type=int, default=4)
     args = parser.parse_args()
 
-    chunks = chunk_corpus(CORPUS)
-    by_id = {chunk.chunk_id: chunk for chunk in chunks}
-
-    lexical = build_fielded_index(chunks)
-    dense = DenseIndex(chunks, build_embedder("char-ngram"))
-    retriever = HybridIndex(lexical, dense)
-
-    questions = [
-        json.loads(line)
-        for line in QUESTIONS.read_text().splitlines()
-        if line.strip()
-    ]
-
+    chunks, by_id, retriever = build()
     packer = pack_sentences if args.packer == "sentences" else pack_whole_chunks
+    answerable = load(ANSWERABLE)
+    unanswerable = load(UNANSWERABLE)
 
-    retained = answered = cited = refused = compliant = 0
-    failures: list[tuple[str, str]] = []
+    gold = {
+        q["id"]: {
+            c.chunk_id for c in chunks if q["gold_phrase"].casefold() in c.text.casefold()
+        }
+        for q in answerable
+    }
 
-    for question in questions:
-        gold_phrase = question["gold_phrase"].casefold()
-        gold_chunks = {
-            chunk.chunk_id
-            for chunk in chunks
-            if gold_phrase in chunk.text.casefold()
+    def run(threshold: float):
+        grounder = Grounder(chunks, min_sufficiency=threshold)
+        good = evaluate(packer, retriever, by_id, grounder, answerable, args.budget)
+        bad = evaluate(packer, retriever, by_id, grounder, unanswerable, args.budget)
+
+        correct = sum(
+            1
+            for outcome in good
+            if outcome["grounded"]
+            and outcome["id"] in gold
+            and any(
+                q["gold_phrase"].casefold() in outcome["text"].casefold()
+                for q in answerable
+                if q["id"] == outcome["id"]
+            )
+        )
+        answered = sum(1 for outcome in good if outcome["grounded"])
+        cited = sum(
+            1 for outcome in good if outcome["grounded"] and outcome["cited"] in gold[outcome["id"]]
+        )
+        false_answers = sum(1 for outcome in bad if outcome["grounded"])
+        return {
+            "correct": correct,
+            "answered": answered,
+            "cited": cited,
+            "false_refusals": len(good) - answered,
+            "false_answers": false_answers,
+            "good": good,
+            "bad": bad,
         }
 
-        hits = retriever.search(question["question"], k=args.retrieve)
-        retrieved = [by_id[chunk_id] for chunk_id, _ in hits]
+    if args.sweep:
+        print()
+        print(f" {'threshold':>9} {'false refusals':>15} {'false answers':>14} {'answer accuracy':>16}")
+        for threshold in (0.0, 0.3, 0.4, 0.5, 0.55, 0.6, 0.65, 0.7, 0.8):
+            result = run(threshold)
+            print(
+                f" {threshold:>9.2f} "
+                f"{result['false_refusals'] / len(answerable):>14.0%} "
+                f"{result['false_answers'] / len(unanswerable):>13.0%} "
+                f"{result['correct'] / len(answerable):>15.0%}"
+            )
+        print()
+        return 0
 
-        packed = packer(question["question"], retrieved, budget=args.budget)
-        if packed.tokens <= args.budget:
-            compliant += 1
-        if gold_phrase in packed.text.casefold():
-            retained += 1
+    result = run(args.min_sufficiency)
+    total_good, total_bad = len(answerable), len(unanswerable)
 
-        result = read(question["question"], packed.text)
-        if not result.grounded:
-            refused += 1
-            failures.append((question["id"], "refused"))
-            continue
-
-        answered += 1
-        if gold_phrase in result.text.casefold():
-            # the reader found the phrase
-            pass
-
-        cited_chunk = next(
-            (c for c in packed.citations if c.number == result.citation), None
-        )
-        if cited_chunk is not None and cited_chunk.chunk_id in gold_chunks:
-            cited += 1
-        else:
-            failures.append((question["id"], f"cited [{[c.number for c in packed.citations if c.chunk_id in gold_chunks]}]"))
-
-    total = len(questions)
     print()
-    print(f" implementation  {IMPL}")
-    print(f" packer          {args.packer}, budget {args.budget} words")
-    print(f" retained gold   {retained}/{total}  {retained/total:.1%}")
-    print(f" within budget   {compliant}/{total}  {compliant/total:.1%}")
-    print(f" answered        {answered}/{total}  {answered/total:.1%}")
-    print(f" citation right  {cited}/{answered if answered else 1}  "
-          f"{cited/(answered if answered else 1):.1%}")
-    print(f" false refusals  {refused}/{total}")
+    print(f" implementation    {IMPL}")
+    print(f" packer            {args.packer}, budget {args.budget} words")
+    print(f" min sufficiency   {args.min_sufficiency}")
+    print()
+    print(f" answerable        {total_good} questions")
+    print(f"   answered        {result['answered']}/{total_good}  {result['answered']/total_good:.1%}")
+    print(f"   correct         {result['correct']}/{total_good}  {result['correct']/total_good:.1%}")
+    print(f"   citation right  {result['cited']}/{result['answered'] or 1}")
+    print(f"   false refusals  {result['false_refusals']}/{total_good}  "
+          f"{result['false_refusals']/total_good:.1%}")
+    print()
+    print(f" unanswerable      {total_bad} questions")
+    print(f"   refused         {total_bad - result['false_answers']}/{total_bad}  "
+          f"{(total_bad - result['false_answers'])/total_bad:.1%}")
+    print(f"   false answers   {result['false_answers']}/{total_bad}  "
+          f"{result['false_answers']/total_bad:.1%}")
 
-    if failures and args.show_failures:
-        print(f"\n first {min(args.show_failures, len(failures))} failure(s)")
-        for question_id, reason in failures[: args.show_failures]:
-            print(f"   {question_id}  {reason}")
+    if args.show_failures:
+        missed = [o for o in result["good"] if not o["grounded"]][: args.show_failures]
+        if missed:
+            print("\n refused but answerable")
+            for outcome in missed:
+                print(f"   {outcome['id']}  {outcome['question'][:66]}")
+        invented = [o for o in result["bad"] if o["grounded"]][: args.show_failures]
+        if invented:
+            print("\n answered but unanswerable")
+            for outcome in invented:
+                print(f"   {outcome['id']}  {outcome['text'][:66]}")
 
     print()
     return 0

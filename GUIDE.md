@@ -36,7 +36,7 @@ the thing.
 | 03 | text analysis and tokenisation | questions and documents spell the same idea differently | recall@5 from 67% to 83% |
 | 04 | dense retrieval and rank fusion | lexical fails on paraphrase; vectors fail on exact terms | hybrid recall@5 from 83% to 88% |
 | 05 | context packing with citations | a context window is a budget | 71% of evidence retained in 180 words, every passage citable |
-| 06 | grounding checks and refusal | an answer without support is a guess that reads like a fact | measured false-answer rate |
+| 06 | grounding checks and refusal | an answer without support is a guess that reads like a fact | a measured trade-off curve between false answers and false refusals |
 | 07 | the eval suite | a number without an interval is a rumour | a report you can defend |
 | 08 | the service | latency and cost are part of correctness | a running endpoint with usage logging |
 
@@ -63,8 +63,9 @@ embedding made the system worse than lexical alone."
 of the evidence in 180 words, and the citation drop that came with it turned out to be
 a generation problem, not a retrieval one."
 
-**After 06:** "Grounding is a check, not a prompt. Each sentence in the answer must
-map to a retrieved passage, or the system refuses."
+**After 06:** "Grounding is a gate, not a prompt. I measured the trade-off: at the
+threshold where three quarters of unanswerable questions are refused, one in five
+answerable questions is also refused."
 
 **After 07:** "I report recall with a confidence interval and a per-category
 breakdown, so a two-point change is not mistaken for progress."
