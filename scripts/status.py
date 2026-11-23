@@ -45,7 +45,7 @@ def main() -> int:
         print(f"  {stage.name:<22} {label}{detail}")
 
     print(f"\n{passed} of {len(stages)} stages passing")
-    return 0
+    return 0 if passed == len(stages) else 1
 
 
 if __name__ == "__main__":
