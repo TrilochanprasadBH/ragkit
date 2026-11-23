@@ -37,7 +37,7 @@ the thing.
 | 04 | dense retrieval and rank fusion | lexical fails on paraphrase; vectors fail on exact terms | hybrid recall@5 from 83% to 88% |
 | 05 | context packing with citations | a context window is a budget | 71% of evidence retained in 180 words, every passage citable |
 | 06 | grounding checks and refusal | an answer without support is a guess that reads like a fact | a measured trade-off curve between false answers and false refusals |
-| 07 | the eval suite | a number without an interval is a rumour | a report you can defend |
+| 07 | the eval suite | a number without an interval is a rumour | intervals, a held-out split, and a power calculation |
 | 08 | the service | latency and cost are part of correctness | a running endpoint with usage logging |
 
 ## 3. What you should be able to say after each stage
@@ -67,8 +67,9 @@ a generation problem, not a retrieval one."
 threshold where three quarters of unanswerable questions are refused, one in five
 answerable questions is also refused."
 
-**After 07:** "I report recall with a confidence interval and a per-category
-breakdown, so a two-point change is not mistaken for progress."
+**After 07:** "My dev number was 96% and my held-out number was 67%, the interval on
+nine questions spans thirty points, and detecting a ten-point change would need around
+250 questions. The eval set is the bottleneck, not the retriever."
 
 **After 08:** "p95 latency and cost per query are measured and capped, because a
 correct answer that takes nine seconds and four cents is not shippable."

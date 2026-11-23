@@ -72,7 +72,7 @@ Filled in as each stage completes. Numbers are produced by `evals/run_evals.py`.
 | 04 | dense retrieval and fusion | recall@5, MRR | **87.5%**, 0.688 |
 | 05 | packing and citation | evidence retained, budget compliance | **70.8%**, 100% |
 | 06 | grounding and refusal | false answers 25% at 21% false refusals | **curve measured** |
-| 07 | eval suite | full report with confidence intervals | not yet measured |
+| 07 | eval suite | intervals, held-out split, power | **31 points of dev/test gap found** |
 | 08 | service | p95 latency, cost per query | not yet measured |
 
 ## Repository layout
