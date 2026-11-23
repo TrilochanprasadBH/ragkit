@@ -38,6 +38,18 @@ from . import analysis
 from .answer import Answer, answer as read, refuse
 from .types import Chunk
 
+# Interrogatives, auxiliaries and pronouns. They cannot discriminate between a pack
+# that answers the question and one that merely discusses the topic, and a question
+# written in natural language is mostly made of them. Leaving them in the denominator
+# means "how do I..." scores worse than "response header", which is a bug, not a signal.
+GRAMMATICAL = frozenset(
+    """
+    how do does did i we you they it what when why which who whom whose
+    can could should would may might must shall also just really actually
+    please tell me my our your
+    """.split()
+)
+
 
 class Grounder:
     def __init__(self, chunks: list[Chunk], min_sufficiency: float = 0.5) -> None:
@@ -56,7 +68,7 @@ class Grounder:
         return math.log(1 + (self.n - df + 0.5) / (df + 0.5))
 
     def sufficiency(self, question: str, pack_text: str) -> float:
-        terms = set(analysis.tokenize(question))
+        terms = {t for t in analysis.tokenize(question) if t not in GRAMMATICAL}
         if not terms:
             return 0.0
         pack_terms = set(analysis.tokenize(pack_text))

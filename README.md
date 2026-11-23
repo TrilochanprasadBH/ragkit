@@ -10,6 +10,9 @@ a deployable container.
 The corpus is the FastAPI documentation (MIT licensed), vendored in `corpus/fastapi/`
 so everything runs offline.
 
+All eight stages are complete, with a reference implementation, executable tests, a
+measured number, and a written lesson for each.
+
 ---
 
 ## What it does
@@ -73,7 +76,7 @@ Filled in as each stage completes. Numbers are produced by `evals/run_evals.py`.
 | 05 | packing and citation | evidence retained, budget compliance | **70.8%**, 100% |
 | 06 | grounding and refusal | false answers 25% at 21% false refusals | **curve measured** |
 | 07 | eval suite | intervals, held-out split, power | **31 points of dev/test gap found** |
-| 08 | service | p95 latency, cost per query | not yet measured |
+| 08 | service | p95 3.3ms end to end, $0.19 per million requests | **done** |
 
 ## Repository layout
 

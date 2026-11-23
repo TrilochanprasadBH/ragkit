@@ -62,29 +62,38 @@ No threshold removes both. You choose which one you are willing to pay for.
 
 ## The measurement
 
-24 answerable questions and 12 unanswerable ones (about Terraform, Kafka, Helm,
+32 answerable questions and 12 unanswerable ones (about Terraform, Kafka, Helm,
 PostgreSQL, Nginx, Elasticsearch, Prometheus, Rails, Kubernetes, Spring Boot, Ceph,
 Nomad). Same retriever, same packer, budget 180 words.
 
 | threshold | false refusals | false answers |
 | --- | --- | --- |
 | 0.00 (no gate) | 0% | 100% |
-| 0.30 | 4% | 92% |
-| 0.40 | 4% | 50% |
-| **0.50 (default)** | **21%** | **25%** |
-| 0.55 | 33% | 17% |
-| 0.60 | 38% | 8% |
-| 0.65 | 50% | 0% |
-| 0.80 | 75% | 0% |
+| 0.30 | 0% | 58% |
+| 0.40 | 6% | 25% |
+| **0.50 (default)** | **22%** | **17%** |
+| 0.55 | 34% | 8% |
+| 0.60 | 41% | 8% |
+| 0.65 | 47% | 0% |
+| 0.80 | 59% | 0% |
 
 **There is no point on this curve where both errors are small.** That is the result,
 and it is more useful than a single accuracy number would have been.
 
-At the default (0.50): 19 of 24 answerable questions answered, 9 of 12 unanswerable
-ones refused, and 3 questions answered that should not have been. Read the three:
-OAuth2 scopes, WebSockets, and a deployment question. The corpus mentions all three
-topics, briefly, inside other pages. A lexical gate cannot tell "this page mentions
-OAuth2" from "this page explains the OAuth2 device flow".
+At the default (0.50): 25 of 32 answerable questions answered, 10 of 12 unanswerable
+ones refused, and 2 questions answered that should not have been. Read the two: a
+deployment question and a question about Spring Boot WebSockets. The corpus mentions
+both topics, briefly, inside other pages. A lexical gate cannot tell "this page mentions
+WebSockets" from "this page explains WebSockets with Spring Boot".
+
+**A bug this stage found, later.** When stage 08 exposed the pipeline over HTTP, a
+natural question ("how do I set a response header") was refused while a terse one
+("response header") was answered. The cause: interrogatives and pronouns were not stop
+words, so `how`, `do` and `i` supplied over half of the sufficiency denominator. They
+cannot discriminate between a pack that answers the question and one that discusses the
+topic, so they are now excluded (see `GRAMMATICAL` in `grounding.py`). The table above is
+the measurement after that fix. It is worth noticing that the bug was invisible in the
+question set and visible in the first realistic request.
 
 **What would do better.** A gate that understands the question, not just its
 vocabulary. That is a model call, and it is exactly the decision-model pattern from

@@ -38,7 +38,7 @@ the thing.
 | 05 | context packing with citations | a context window is a budget | 71% of evidence retained in 180 words, every passage citable |
 | 06 | grounding checks and refusal | an answer without support is a guess that reads like a fact | a measured trade-off curve between false answers and false refusals |
 | 07 | the eval suite | a number without an interval is a rumour | intervals, a held-out split, and a power calculation |
-| 08 | the service | latency and cost are part of correctness | a running endpoint with usage logging |
+| 08 | the service | latency and cost are part of correctness | p95 3.3ms, logged usage, a manifest, a container |
 
 ## 3. What you should be able to say after each stage
 
@@ -71,8 +71,8 @@ answerable questions is also refused."
 nine questions spans thirty points, and detecting a ten-point change would need around
 250 questions. The eval set is the bottleneck, not the retriever."
 
-**After 08:** "p95 latency and cost per query are measured and capped, because a
-correct answer that takes nine seconds and four cents is not shippable."
+**After 08:** "p95 is 3.3ms and a request costs $0.19 per million, and I can say what
+those numbers exclude: the generation call, which the stand-in reader replaces."
 
 ## 4. The rules
 
