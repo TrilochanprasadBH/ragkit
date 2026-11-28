@@ -1,10 +1,10 @@
-"""Stage 01 — loading documents and splitting them into chunks.
+# Stage 01 — Document loading and heading-aware chunking
 
-Run everything from the repository root:
+```sh
+python stages/01_ingest/test_stage01.py
+```
 
-    python stages/01_ingest/test_stage01.py
-
-Every test fails at first. That is the starting state.
+Twenty tests, all failing at first.
 
 ---
 
@@ -40,8 +40,10 @@ tells a reader exactly where to look.
 - Chunks too large dilute the match. If a 900-word chunk is retrieved because one
   sentence matched, the model receives 890 irrelevant words and pays for them.
 
-180 words is a starting point, not a law. Stage 04 will let you compare chunk sizes
-empirically, which is the only correct way to choose one.
+180 words is a starting point, not a law. The measurement below compares chunk sizes
+empirically. It can only be run once a retriever exists, because the question "is this
+chunk the right size" is really "does the retriever find it and rank it well" — so run
+it after stage 04 and treat every earlier choice as provisional.
 
 **Overlap exists because meaning crosses boundaries.** A sentence that defines a term
 often begins in one paragraph and ends in the next. Carrying the last few sentences
@@ -55,6 +57,71 @@ enough to cover typical sentence length, not more.
 ids change between runs, then a stored answer can no longer be traced to its source.
 So ids are derived from the document path and the position, and documents are loaded
 in sorted order.
+
+## The measurement
+
+Chunking can only be scored through a retriever, so this experiment runs after stage
+04, over the 32 golden questions, with the flag the eval runner now carries:
+
+```sh
+for w in 90 120 180 240 300 360; do
+  printf "%-3s words  " $w
+  IMPL=reference python evals/run_evals.py --index hybrid --chunk-words $w \
+    | grep -E "recall|MRR" | tr '\n' ' '
+  echo
+done
+```
+
+The run on 2026-11-28 produced this:
+
+| chunk words | lexical recall@5 | lexical MRR | hybrid recall@5 | hybrid MRR |
+| --- | --- | --- | --- | --- |
+| 90 | 78.1% | 0.575 | 87.5% | **0.707** |
+| 120 | 75.0% | 0.545 | 87.5% | 0.658 |
+| **180 (default)** | 75.0% | 0.577 | 87.5% | 0.672 |
+| 240 | 75.0% | 0.556 | 87.5% | 0.639 |
+| 300 | 75.0% | 0.571 | 84.4% | 0.615 |
+| 360 | 75.0% | 0.556 | 87.5% | 0.618 |
+
+Read it honestly, in three lines.
+
+**Recall barely moves.** Hybrid holds 87.5% at every size except 300 words, where it
+loses one question net: bigger chunks *fix* the HTTPS question q15 (more surrounding
+context for the paraphrase to match) and *break* q11 and q29, whose gold passages are
+now diluted among more vocabulary. That is the two failure modes above fighting each
+other, and the net is a loss. Every gold phrase still resolves to a chunk at every
+size — nothing was split in half — so the entire movement is ranking, not truncation.
+
+**Small chunks buy MRR.** At 90 words, hybrid MRR is 0.707 against 0.672 at 180: a
+precise chunk outranks a dilute one, the same dilution argument stage 02 makes about
+BM25 length normalisation, arriving from the other end. The difference is 0.035, about
+one question's worth on 32 questions (1/32 = 0.031), and this measurement cannot tell
+you it would survive a different corpus.
+
+**The default stays 180, with the reason stated rather than hidden.** The packing stage
+is designed around a 180-word budget, and a 90-word chunk answers nothing alone — the
+"too small" failure mode is real and MRR does not measure it. If you keep 90 after
+reading this, write down why in `NOTES.md`; the sweep is one command and every corpus
+you are handed deserves its own run.
+
+One detail makes the sweep possible at all: golden labels are phrases, not chunk ids
+(stage 02). Re-chunking changes every id, and a phrase label survives it.
+
+## Field notes
+
+From `FIELD-NOTES.md`:
+
+- **Anthropic's contextual retrieval** had a model write 50–100 tokens of context into
+  every chunk before indexing. The heading breadcrumb this stage captures is the free
+  version of the same idea: context the document already carried, with no model call.
+  The paid version is in the "deliberately did not build" table, with the corpus size
+  that would justify it.
+- **AWS Well-Architected** recommends chunking that follows document structure rather
+  than fixed character counts. That is the design here: sections first, sentences
+  second, and the word limit only as a cap.
+- **The 2026 replication** of contextual retrieval found that cutting documents at
+  their headings matched generated context headers for retrieval quality. Structure
+  you can parse for free is hard to beat, and it is what this stage relies on.
 
 ## Do this
 
@@ -125,6 +192,7 @@ list before loading is what prevents this, and it is one line that people forget
 answer is "the 95th percentile of sentence length in this corpus". Run that number
 once and your overlap stops being arbitrary.
 
-**Whether chunk size is a decision or a default.** In stage 04 you will compare 120,
-180 and 300 words on the same questions. Until then, write down why you chose 180,
-so that the later measurement has something to contradict.
+**Whether chunk size is a decision or a default.** The measurement above compares six
+sizes on the same questions. The default stayed 180 and the reason is written down; the
+sweep is one command, and every corpus you are handed deserves its own run before you
+inherit either the number or the reason.

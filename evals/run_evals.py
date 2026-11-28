@@ -134,9 +134,18 @@ def main() -> int:
         default="char-ngram",
         help="embedder used by the dense and hybrid indexes",
     )
+    parser.add_argument(
+        "--chunk-words",
+        type=int,
+        default=180,
+        help=(
+            "maximum chunk size in words; the knob stage 01's measurement section sweeps. "
+            "180 is the default the lessons were written against"
+        ),
+    )
     args = parser.parse_args()
 
-    chunks = chunk_corpus(CORPUS)
+    chunks = chunk_corpus(CORPUS, max_tokens=args.chunk_words)
     index = build_configuration(args.index, chunks, args.embedder)
     questions = load_questions()
 
