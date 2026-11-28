@@ -97,6 +97,13 @@ number, taken once, is a feeling.
 It is not a framework. There is no plugin system and no configuration layer. Every
 component is a function you can read in one sitting.
 
+It is also not a generation course. The reader that turns packed evidence into an
+answer is a deterministic stand-in, not a language model, because the project runs
+offline and deterministically. You will not write a prompt or choose a model here; you
+will measure retrieval, packing, gating, evaluation and serving, and stage 08's closing
+section names swapping in a real model as the next step, with the hooks already in
+place.
+
 That is deliberate. Frameworks teach you their abstractions. This teaches you the
 problem.
 

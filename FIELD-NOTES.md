@@ -72,11 +72,18 @@ failure list demands it.
 retrieval only after the lexical failure list shows vocabulary gaps, which is the
 evidence AWS is asking for.
 
-### 4. Reciprocal Rank Fusion — Azure AI Search, OpenSearch
+### 4. Reciprocal Rank Fusion — Cormack, Clarke and Büttcher (SIGIR 2009)
+
+**Source.** "Reciprocal rank fusion outperforms Condorcet and individual rank learning
+methods", SIGIR 2009, pp. 758–759, dl.acm.org/doi/10.1145/1571941.1572114. The same
+formula is the default hybrid combiner in Azure AI Search and OpenSearch.
 
 **What they did.** Fuse ranked lists by rank rather than raw score:
-`score(doc) = sum(1 / (k + rank))` with `k = 60` in the common configuration. Rank
-fusion avoids pretending that a BM25 score and a cosine distance are on the same
+`score(doc) = sum(1 / (k + rank))` with `k = 60` in the common configuration. Their own
+paper is honest about the constant: `k = 60` was fixed during a pilot investigation and
+never tuned afterwards, and their sweep shows it within a thousandth of MAP of any k
+between 20 and 100. The shape matters; the constant barely does. Rank fusion avoids
+pretending that a BM25 score and a cosine distance are on the same
 scale.
 
 **What it means.** When you combine two retrievers, never average their scores. Fuse
@@ -314,5 +321,7 @@ measurement and the rule: check the first stage's MRR first.
 | Fine-tuning | no labels for behaviour, and retrieval covers knowledge | consistent format or tone is the goal, not knowledge |
 | A real cross-encoder reranker | needs a hosted model per candidate; the stand-in is what stage 09 measures | first-stage MRR below roughly 0.7 and an eval set big enough to resolve the change |
 | Decision-model gate | needs a hosted model | a high-volume, narrow, expensive call you want to skip |
+| Query rewriting | every question here is a single-hop lookup; the vocabulary-gap failures stage 02 listed were fixed and measured with tokenisation and embeddings instead (stage 03) | vague or multi-turn questions, or users whose wording never matches the corpus (the AWS note's anti-pattern) |
+| Multi-hop questions needing two documents | the golden set has none: every question is answered by one passage, so packing across documents was never exercised | a corpus with cross-referenced pages and questions that must combine them; stage 05's packer is where the two passages would meet |
 
 Each row is a deliberate choice you should be able to defend, not an oversight.

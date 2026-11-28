@@ -18,7 +18,9 @@ What is checked:
 
 1. every row of the "Current numbers" table: hits, recall@5 and MRR, for five configurations
 2. stage 09's row in the results table: the two dev-split MRR gains it quotes
-3. that no configuration name in the table is unknown — a silent miss is worse than a failure
+3. stage 06's row in the results table: the default-threshold operating point it quotes,
+   re-measured through the full pipeline (hybrid retrieval, sentence packing, gate at 0.5)
+4. that no configuration name in the table is unknown — a silent miss is worse than a failure
 """
 
 from __future__ import annotations
@@ -37,6 +39,10 @@ from ragkit.ingest import chunk_corpus  # noqa: E402
 
 sys.path.insert(0, str(ROOT / "evals"))
 from run_evals import build_configuration, load_questions, score_configuration  # noqa: E402
+from run_qa_eval import ANSWERABLE, UNANSWERABLE, build as build_qa, evaluate as evaluate_qa, load  # noqa: E402
+
+from ragkit.grounding import Grounder  # noqa: E402
+from ragkit.pack import pack  # noqa: E402
 
 CORPUS = ROOT / "corpus" / "fastapi"
 README = ROOT / "README.md"
@@ -124,6 +130,40 @@ def main() -> int:
                         f"stage 09 row says {value} on {label}, measured {gains[label]:+.3f}"
                     )
 
+    # Stage 06's row quotes the default-threshold operating point of the trade-off curve.
+    # It is not a historical number: it describes the pipeline as shipped, so it is re-measured.
+    qa_chunks, by_id, retriever = build_qa()
+    grounder = Grounder(qa_chunks, min_sufficiency=0.5)
+    good = evaluate_qa(pack, retriever, by_id, grounder, load(ANSWERABLE), 180)
+    bad = evaluate_qa(pack, retriever, by_id, grounder, load(UNANSWERABLE), 180)
+    refusals = sum(1 for outcome in good if not outcome["grounded"])
+    false_answers = sum(1 for outcome in bad if outcome["grounded"])
+
+    row06 = next(
+        (line for line in text.splitlines() if line.startswith("| 06 | grounding and refusal")),
+        None,
+    )
+    if row06 is None:
+        problems.append("stage 06 has no row in the results table")
+    else:
+        match = re.search(r"false answers (\d+)% at (\d+)% false refusals", row06)
+        if match is None:
+            problems.append("stage 06 row does not quote both error rates")
+        else:
+            quoted_answers, quoted_refusals = (int(value) for value in match.groups())
+            measured_answers = round(false_answers / len(bad) * 100)
+            measured_refusals = round(refusals / len(good) * 100)
+            if quoted_answers != measured_answers:
+                problems.append(
+                    f"stage 06 row says {quoted_answers}% false answers, "
+                    f"measured {measured_answers}% ({false_answers}/{len(bad)})"
+                )
+            if quoted_refusals != measured_refusals:
+                problems.append(
+                    f"stage 06 row says {quoted_refusals}% false refusals, "
+                    f"measured {measured_refusals}% ({refusals}/{len(good)})"
+                )
+
     if problems:
         print(f" {len(problems)} problem(s)")
         for problem in problems:
@@ -131,10 +171,10 @@ def main() -> int:
         return 1
 
     print(f" ok: {checked} configurations match the README tables")
-    print(
-        f" stage 09 gains: dense {gains['dense']:+.3f}, hybrid {gains['hybrid']:+.3f} "
-        "(dev split)"
-    )
+    print(f" stage 09 gains: dense {gains['dense']:+.3f}, hybrid {gains['hybrid']:+.3f} "
+          "(dev split)")
+    print(f" stage 06 operating point: false refusals {refusals}/{len(good)}, "
+          f"false answers {false_answers}/{len(bad)}")
     return 0
 
 

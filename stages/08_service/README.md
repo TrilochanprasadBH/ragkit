@@ -208,7 +208,10 @@ live.
 ## The project ends here
 
 You now have eight stages, a service, and a report that states what it can and cannot
-prove. If you want the next three things to do, in order:
+prove. One more stage exists after this one: **stage 09 measures whether a reranker
+earns its cost, and the honest answer on this corpus is no.** Read it — a measured
+negative result is the most transferable thing in the repository. Then, if you want
+the next three things to do, in order:
 
 1. **Grow the eval set** to the size the power analysis asks for, written by someone who
    has not read the code. This is the highest-value work in the repository and nobody

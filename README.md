@@ -3,7 +3,7 @@
 A documentation assistant that answers questions about a real documentation set and
 cites the exact sections it used.
 
-This repository is a **course and a product at the same time**. You build it in eight
+This repository is a **course and a product at the same time**. You build it in nine
 stages. At the end you have a working service, an eval report with real numbers, and
 a deployable container.
 
@@ -31,11 +31,20 @@ measured it, and the model fills gaps with plausible text.
 
 This project forces the measurement. Every stage adds one capability and one number.
 
+One boundary to know before you start: the generation step — the G in RAG — is a
+deterministic stand-in reader, not a language model. This course measures retrieval,
+packing, gating, evaluation and serving, and says at each stage which numbers a real
+model call would change. Swapping one in is the first named next step when the
+course ends.
+
 ## Requirements
 
 - Python 3.10 or newer
-- No third-party packages for stages 1 to 6. Stage 7 adds the eval runner, stage 8
-  adds the web service. Both are listed with setup instructions when you reach them.
+- No third-party packages, anywhere. Retrieval, the eval runner, the statistics, and
+  the web service are all standard library, so the project runs offline with no
+  installation step.
+- The one optional extra is stage 04's `remote` embedder, which needs an API key and is
+  off by default. The offline `char-ngram` embedder is what every documented number uses.
 
 ## Quick start
 
