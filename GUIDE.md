@@ -1,6 +1,6 @@
 # Guide
 
-This is the course. Eight stages, in order. Each stage has a lesson in
+This is the course. Nine stages, in order. Each stage has a lesson in
 `stages/NN_name/README.md` and a test suite that defines what "done" means.
 
 Read this page once. Then work one stage at a time.
@@ -39,6 +39,7 @@ the thing.
 | 06 | grounding checks and refusal | an answer without support is a guess that reads like a fact | a measured trade-off curve between false answers and false refusals |
 | 07 | the eval suite | a number without an interval is a rumour | intervals, a held-out split, and a power calculation |
 | 08 | the service | latency and cost are part of correctness | p95 3.3ms, logged usage, a manifest, a container |
+| 09 | reranking | a second stage only helps if the first one left something to fix | +0.13 MRR on the weakest first stage, +0.01 on the strongest, neither significant |
 
 ## 3. What you should be able to say after each stage
 
@@ -106,7 +107,7 @@ You will have:
 - a working RAG service over a real corpus
 - an eval report with numbers you produced and can defend
 - a container you can deploy
-- eight stages of notes explaining your own decisions
+- nine stages of notes explaining your own decisions
 
 That is a portfolio piece and an interview answer. The numbers are the part that
 matters: anyone can say they built a RAG system, and very few can say what its

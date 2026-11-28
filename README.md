@@ -10,7 +10,7 @@ a deployable container.
 The corpus is the FastAPI documentation (MIT licensed), vendored in `corpus/fastapi/`
 so everything runs offline.
 
-All eight stages are complete, with a reference implementation, executable tests, a
+All nine stages are complete, with a reference implementation, executable tests, a
 measured number, and a written lesson for each.
 
 ---
@@ -65,7 +65,8 @@ The tests fail at first. That is the starting state.
 
 ## Results
 
-Filled in as each stage completes. Numbers are produced by `evals/run_evals.py`.
+Filled in as each stage completes. Numbers are produced by `evals/run_evals.py` and
+checked by `evals/check_docs.py`.
 
 | stage | capability | measure | result |
 | --- | --- | --- | --- |
@@ -77,6 +78,26 @@ Filled in as each stage completes. Numbers are produced by `evals/run_evals.py`.
 | 06 | grounding and refusal | false answers 25% at 21% false refusals | **curve measured** |
 | 07 | eval suite | intervals, held-out split, power | **31 points of dev/test gap found** |
 | 08 | service | p95 3.3ms end to end, $0.19 per million requests | **done** |
+| 09 | reranking | MRR gain over the first stage | **+0.13** dense, +0.01 hybrid, neither significant |
+
+### Current numbers
+
+The golden set grew from 24 to 32 questions (23 development, 9 held out) after stage 04 was
+written, so the stage rows above quote the set they were measured against. Re-running every
+configuration on the set as it exists today:
+
+| configuration | hits | recall@5 | MRR |
+| --- | --- | --- | --- |
+| lexical (stage 02) | 24/32 | 75.0% | 0.577 |
+| fielded (stage 03) | 27/32 | 84.4% | 0.635 |
+| hybrid (stage 04) | 28/32 | 87.5% | 0.672 |
+| dense + rerank | 26/32 | 81.2% | 0.662 |
+| hybrid + rerank | 27/32 | 84.4% | 0.695 |
+
+`python evals/check_docs.py` re-runs these five and the stage 09 row, and fails if either drifts
+by more than a rounding step. The reranked rows are lower on recall and that is the finding of
+stage 09, not a regression: a reranker reorders, it cannot recover a passage the first stage never
+retrieved.
 
 ## Repository layout
 

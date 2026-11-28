@@ -47,14 +47,85 @@ def load_questions() -> list[dict]:
     ]
 
 
+def gold_chunks(chunks, question) -> set[str]:
+    """Every chunk whose text or heading path contains the gold phrase.
+
+    Labels are phrases rather than chunk ids so they survive re-chunking. This is the single
+    definition of "the gold chunk" in the repository; `evals/check_docs.py` and the stage tests
+    use it too, so a change here cannot silently move a number in one place and not another.
+    """
+    phrase = question["gold_phrase"].casefold()
+    return {
+        chunk.chunk_id
+        for chunk in chunks
+        if phrase in chunk.text.casefold()
+        or phrase in " ".join(chunk.headings).casefold()
+    }
+
+
+def build_configuration(name: str, chunks, embedder: str = "char-ngram"):
+    """Build one named retrieval configuration. The only place that knows how."""
+    if name == "lexical":
+        from ragkit.lexical import build_index
+
+        return build_index(chunks)
+    if name == "fielded":
+        from ragkit.fielded import build_fielded_index
+
+        return build_fielded_index(chunks)
+
+    from ragkit.dense import DenseIndex, HybridIndex
+    from ragkit.embeddings import build_embedder
+    from ragkit.fielded import build_fielded_index
+
+    dense = DenseIndex(chunks, build_embedder(embedder))
+    if name == "dense":
+        return dense
+    hybrid = HybridIndex(build_fielded_index(chunks), dense)
+    if name == "hybrid":
+        return hybrid
+
+    from ragkit.rerank import RerankIndex
+
+    return RerankIndex(hybrid if name == "rerank-hybrid" else dense, chunks)
+
+
+def score_configuration(index, chunks, questions, k: int = 5) -> tuple[int, float, float]:
+    """(hits, recall@k, MRR) over the questions whose gold phrase exists in the corpus."""
+    hits = 0
+    reciprocal = 0.0
+    scored = 0
+    for question in questions:
+        gold = gold_chunks(chunks, question)
+        if not gold:
+            continue
+        scored += 1
+        results = index.search(question["question"], k=k)
+        rank = next(
+            (
+                position
+                for position, (chunk_id, _) in enumerate(results, start=1)
+                if chunk_id in gold
+            ),
+            None,
+        )
+        if rank is not None:
+            hits += 1
+            reciprocal += 1.0 / rank
+    return hits, hits / scored if scored else 0.0, reciprocal / scored if scored else 0.0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--k", type=int, default=5)
     parser.add_argument(
         "--index",
-        choices=("lexical", "fielded", "dense", "hybrid"),
+        choices=("lexical", "fielded", "dense", "hybrid", "rerank-dense", "rerank-hybrid"),
         default="lexical",
-        help="lexical is stage 02's BM25; fielded is stage 03's, with pluggable tokenisation",
+        help=(
+            "lexical is stage 02's BM25; fielded is stage 03's, with pluggable tokenisation; "
+            "rerank-dense and rerank-hybrid add stage 09's reranker to that first stage"
+        ),
     )
     parser.add_argument("--show-failures", type=int, default=5)
     parser.add_argument(
@@ -66,26 +137,7 @@ def main() -> int:
     args = parser.parse_args()
 
     chunks = chunk_corpus(CORPUS)
-
-    if args.index == "fielded":
-        from ragkit.fielded import build_fielded_index
-
-        index = build_fielded_index(chunks)
-    elif args.index in ("dense", "hybrid"):
-        from ragkit.dense import DenseIndex, HybridIndex
-        from ragkit.embeddings import build_embedder
-        from ragkit.fielded import build_fielded_index
-
-        embedder = build_embedder(args.embedder)
-        dense = DenseIndex(chunks, embedder)
-        if args.index == "dense":
-            index = dense
-        else:
-            index = HybridIndex(build_fielded_index(chunks), dense)
-    else:
-        from ragkit.lexical import build_index
-
-        index = build_index(chunks)
+    index = build_configuration(args.index, chunks, args.embedder)
     questions = load_questions()
 
     by_phrase = {q["id"]: q for q in questions}
@@ -96,12 +148,7 @@ def main() -> int:
     failures: list[tuple[str, int | None]] = []
 
     for question in questions:
-        phrase = question["gold_phrase"].casefold()
-        gold_ids = {
-            chunk.chunk_id
-            for chunk in chunks
-            if phrase in chunk.text.casefold() or phrase in " ".join(chunk.headings).casefold()
-        }
+        gold_ids = gold_chunks(chunks, question)
         if not gold_ids:
             broken.append(question["id"])
             continue

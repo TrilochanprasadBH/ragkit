@@ -279,8 +279,26 @@ necessary.
 **What it means.** Twenty-four questions is a legitimate eval set. Waiting for a
 thousand is a way of never starting.
 
-**In this project.** The golden set is 24 questions. Stage 07 adds more and splits them
-into development and held-out halves.
+**In this project.** The golden set is 32 questions, split 23 development and 9 held out.
+Stage 07 is where the split and the intervals came from.
+
+### 15. Passage re-ranking with BERT — Nogueira and Cho (2019)
+
+**Source.** arxiv.org/abs/1901.04085
+
+**What they did.** Re-implemented BERT as a query-passage cross-encoder and re-ranked a
+first-stage list with it. The abstract reports the system as state of the art on TREC-CAR
+and the top entry on the MS MARCO passage retrieval leaderboard, "outperforming the
+previous state of the art by 27% (relative) in MRR@10".
+
+**What it means.** The gain comes from reading the query and the passage together with a
+pretrained language model. That is the part a lexical stand-in cannot reproduce, and it is
+why the size of a reranking gain depends on how much the first stage left on the table.
+
+**In this project.** Stage 09 builds the stand-in and measures it before shipping it:
++0.128 MRR when the first stage is dense, +0.009 when it is hybrid, and neither gain
+survives a sign test at n = 23. The reranker is not in the pipeline. What shipped is the
+measurement and the rule: check the first stage's MRR first.
 
 ---
 
@@ -293,6 +311,7 @@ into development and held-out halves.
 | Agent framework (LangGraph and similar) | the control flow is known and small | many tools, dynamic planning, human-in-the-loop |
 | Multi-agent orchestration | one loop is enough for this task | context pollution, parallel independent work, or 20+ tools |
 | Fine-tuning | no labels for behaviour, and retrieval covers knowledge | consistent format or tone is the goal, not knowledge |
+| A real cross-encoder reranker | needs a hosted model per candidate; the stand-in is what stage 09 measures | first-stage MRR below roughly 0.7 and an eval set big enough to resolve the change |
 | Decision-model gate | needs a hosted model | a high-volume, narrow, expensive call you want to skip |
 
 Each row is a deliberate choice you should be able to defend, not an oversight.
