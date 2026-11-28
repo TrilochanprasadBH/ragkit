@@ -75,16 +75,17 @@ checked by `evals/check_docs.py`.
 | 03 | text analysis | recall@5, MRR | **83.3%**, 0.668 |
 | 04 | dense retrieval and fusion | recall@5, MRR | **87.5%**, 0.688 |
 | 05 | packing and citation | evidence retained, budget compliance | **70.8%**, 100% |
-| 06 | grounding and refusal | false answers 25% at 21% false refusals | **curve measured** |
-| 07 | eval suite | intervals, held-out split, power | **31 points of dev/test gap found** |
+| 06 | grounding and refusal | false answers 17% at 22% false refusals | **curve measured** |
+| 07 | eval suite | intervals, held-out split, power | **up to 21 points of dev/test gap found** |
 | 08 | service | p95 3.3ms end to end, $0.19 per million requests | **done** |
 | 09 | reranking | MRR gain over the first stage | **+0.13** dense, +0.01 hybrid, neither significant |
 
 ### Current numbers
 
-The golden set grew from 24 to 32 questions (23 development, 9 held out) after stage 04 was
-written, so the stage rows above quote the set they were measured against. Re-running every
-configuration on the set as it exists today:
+The golden set grew from 24 to 32 questions (22 development, 10 held out) after stage 04 was
+written, so the stage rows above quote the set they were measured against. The dev/test split
+was later re-done by document — no document appears in both splits, and the stage 07 lesson
+records why. Re-running every configuration on the set as it exists today:
 
 | configuration | hits | recall@5 | MRR |
 | --- | --- | --- | --- |

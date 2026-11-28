@@ -68,8 +68,8 @@ a generation problem, not a retrieval one."
 threshold where three quarters of unanswerable questions are refused, one in five
 answerable questions is also refused."
 
-**After 07:** "My dev number was 96% and my held-out number was 67%, the interval on
-nine questions spans thirty points, and detecting a ten-point change would need around
+**After 07:** "My dev number was 91% and my held-out number was 80%, the interval on
+ten questions spans forty-five points, and detecting a ten-point change would need around
 250 questions. The eval set is the bottleneck, not the retriever."
 
 **After 08:** "p95 is 3.3ms and a request costs $0.19 per million, and I can say what

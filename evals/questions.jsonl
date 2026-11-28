@@ -1,7 +1,7 @@
 {"id": "q01", "question": "How do I return HTML instead of JSON from an endpoint?", "gold_doc": "advanced/custom-response.md", "gold_phrase": "HTMLResponse", "category": "identifier", "split": "dev"}
 {"id": "q02", "question": "How do I stream a file as the response?", "gold_doc": "advanced/custom-response.md", "gold_phrase": "Asynchronously streams a file", "category": "howto", "split": "dev"}
 {"id": "q03", "question": "How do I run code once before the application starts receiving requests?", "gold_doc": "advanced/events.md", "gold_phrase": "before the application", "category": "howto", "split": "dev"}
-{"id": "q04", "question": "How do I add my own middleware to the application?", "gold_doc": "advanced/middleware.md", "gold_phrase": "Custom Middleware", "category": "howto", "split": "test"}
+{"id": "q04", "question": "How do I add my own middleware to the application?", "gold_doc": "advanced/middleware.md", "gold_phrase": "Custom Middleware", "category": "howto", "split": "dev"}
 {"id": "q05", "question": "How do I set a custom header on a response?", "gold_doc": "advanced/response-headers.md", "gold_phrase": "parameter of type", "category": "howto", "split": "dev"}
 {"id": "q06", "question": "What does the application expect in HTTP Basic Auth?", "gold_doc": "advanced/security/http-basic-auth.md", "gold_phrase": "username and a password", "category": "concept", "split": "dev"}
 {"id": "q07", "question": "How do I get fine-grained permissions with OAuth2 scopes?", "gold_doc": "advanced/security/oauth2-scopes.md", "gold_phrase": "fine-grained permission system", "category": "concept", "split": "dev"}
@@ -15,18 +15,18 @@
 {"id": "q15", "question": "Is HTTPS just a flag I turn on?", "gold_doc": "deployment/https.md", "gold_phrase": "HTTPS is something that is just", "category": "concept", "split": "test"}
 {"id": "q16", "question": "How do FastAPI services usually read configuration such as database URLs?", "gold_doc": "environment-variables.md", "gold_phrase": "environment variables for configuration", "category": "howto", "split": "test"}
 {"id": "q17", "question": "Which standard is FastAPI's automatic data model documentation based on?", "gold_doc": "features.md", "gold_phrase": "JSON Schema", "category": "identifier", "split": "dev"}
-{"id": "q18", "question": "How do I run a task after the response has been returned?", "gold_doc": "tutorial/background-tasks.md", "gold_phrase": "returning a response", "category": "howto", "split": "dev"}
+{"id": "q18", "question": "How do I run a task after the response has been returned?", "gold_doc": "tutorial/background-tasks.md", "gold_phrase": "returning a response", "category": "howto", "split": "test"}
 {"id": "q19", "question": "What is a request body?", "gold_doc": "tutorial/body.md", "gold_phrase": "data sent by the client", "category": "concept", "split": "dev"}
 {"id": "q20", "question": "What does the simplest possible FastAPI file look like?", "gold_doc": "tutorial/first-steps.md", "gold_phrase": "simplest FastAPI file", "category": "identifier", "split": "test"}
 {"id": "q21", "question": "What happens when a value in the URL path fails validation?", "gold_doc": "tutorial/path-params.md", "gold_phrase": "validation didn't pass", "category": "concept", "split": "dev"}
 {"id": "q22", "question": "What exactly are query parameters in a URL?", "gold_doc": "tutorial/query-params.md", "gold_phrase": "key-value pairs that go after the", "category": "concept", "split": "test"}
 {"id": "q23", "question": "How does the return type annotation control the response data?", "gold_doc": "tutorial/response-model.md", "gold_phrase": "the returned data", "category": "howto", "split": "dev"}
 {"id": "q24", "question": "How do I enable CORS on the application?", "gold_doc": "advanced/middleware.md", "gold_phrase": "CORSMiddleware", "category": "identifier", "split": "dev"}
-{"id": "q25", "question": "Does the response model still apply when I return a Response directly?", "gold_doc": "advanced/response-headers.md", "gold_phrase": "filter and convert the object you returned", "category": "howto", "split": "test"}
+{"id": "q25", "question": "Does the response model still apply when I return a Response directly?", "gold_doc": "advanced/response-headers.md", "gold_phrase": "filter and convert the object you returned", "category": "howto", "split": "dev"}
 {"id": "q26", "question": "Why should settings be read from environment variables?", "gold_doc": "advanced/settings.md", "gold_phrase": "read by the application", "category": "howto", "split": "dev"}
-{"id": "q27", "question": "How do I stream pure binary data rather than JSON?", "gold_doc": "advanced/stream-data.md", "gold_phrase": "stream pure binary data", "category": "howto", "split": "dev"}
+{"id": "q27", "question": "How do I stream a large binary file without reading it all into memory at once?", "gold_doc": "advanced/stream-data.md", "gold_phrase": "without having to read it all into memory at once", "category": "howto", "split": "test"}
 {"id": "q28", "question": "Why would I override a dependency when testing?", "gold_doc": "advanced/testing-dependencies.md", "gold_phrase": "the original dependency to run", "category": "concept", "split": "dev"}
-{"id": "q29", "question": "Why is HTTPS more complex than a simple on or off switch?", "gold_doc": "deployment/https.md", "gold_phrase": "way more complex than that", "category": "concept", "split": "dev"}
+{"id": "q29", "question": "Why is HTTPS more complex than a simple on or off switch?", "gold_doc": "deployment/https.md", "gold_phrase": "way more complex than that", "category": "concept", "split": "test"}
 {"id": "q30", "question": "What kind of function can be used as a background task?", "gold_doc": "tutorial/background-tasks.md", "gold_phrase": "standard function that can receive parameters", "category": "howto", "split": "test"}
 {"id": "q31", "question": "Where can I declare a Response parameter in my endpoint?", "gold_doc": "advanced/response-headers.md", "gold_phrase": "path operation function", "category": "howto", "split": "dev"}
 {"id": "q32", "question": "How should sensitive values such as secrets be supplied?", "gold_doc": "advanced/settings.md", "gold_phrase": "sensitive, like secrets", "category": "howto", "split": "dev"}

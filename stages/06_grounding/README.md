@@ -74,8 +74,8 @@ Nomad). Same retriever, same packer, budget 180 words.
 | **0.50 (default)** | **22%** | **17%** |
 | 0.55 | 34% | 8% |
 | 0.60 | 41% | 8% |
-| 0.65 | 47% | 0% |
-| 0.80 | 59% | 0% |
+| 0.65 | 44% | 0% |
+| 0.80 | 56% | 0% |
 
 **There is no point on this curve where both errors are small.** That is the result,
 and it is more useful than a single accuracy number would have been.

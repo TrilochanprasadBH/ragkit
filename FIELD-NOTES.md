@@ -279,7 +279,8 @@ necessary.
 **What it means.** Twenty-four questions is a legitimate eval set. Waiting for a
 thousand is a way of never starting.
 
-**In this project.** The golden set is 32 questions, split 23 development and 9 held out.
+**In this project.** The golden set is 32 questions, split 22 development and 10 held
+out — by document, so no held-out question targets a document the tuning saw.
 Stage 07 is where the split and the intervals came from.
 
 ### 15. Passage re-ranking with BERT — Nogueira and Cho (2019)
@@ -296,8 +297,8 @@ pretrained language model. That is the part a lexical stand-in cannot reproduce,
 why the size of a reranking gain depends on how much the first stage left on the table.
 
 **In this project.** Stage 09 builds the stand-in and measures it before shipping it:
-+0.128 MRR when the first stage is dense, +0.009 when it is hybrid, and neither gain
-survives a sign test at n = 23. The reranker is not in the pipeline. What shipped is the
++0.133 MRR when the first stage is dense, +0.009 when it is hybrid, and neither gain
+survives a sign test at n = 22. The reranker is not in the pipeline. What shipped is the
 measurement and the rule: check the first stage's MRR first.
 
 ---

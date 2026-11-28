@@ -167,7 +167,7 @@ class TestRerankIndex(unittest.TestCase):
 class TestMeasured(unittest.TestCase):
     """The numbers that decide whether a reranker belongs in the pipeline.
 
-    Tuned and reported on the development split. The held-out split has nine questions, which is
+    Tuned and reported on the development split. The held-out split has ten questions, which is
     too few to resolve a change of one hundredth of an MRR point — and the last two tests are
     there to make that failure visible rather than to hide it.
     """
@@ -230,8 +230,8 @@ class TestMeasured(unittest.TestCase):
         self.assertLess(reranked[0], base[0], "the reranker demotes chunks fusion got right")
 
     def test_the_held_out_split_disagrees_with_dev(self):
-        # Dense gains 0.13 on dev and loses ground on the nine held-out questions. That is not a
-        # property of the reranker; it is the interval on nine questions being wider than the
+        # Dense gains 0.13 on dev and loses ground on the ten held-out questions. That is not a
+        # property of the reranker; it is the interval on ten questions being wider than the
         # effect. The lesson reports both numbers and claims neither.
         dev_gain = self.measure(self.dense_reranked, self.dev)[1] - self.measure(self.dense, self.dev)[1]
         test_gain = self.measure(self.dense_reranked, self.test)[1] - self.measure(self.dense, self.test)[1]

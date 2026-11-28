@@ -53,37 +53,52 @@ asking, no matter how carefully you compute the average.
 
 ## What the report found
 
-`evals/report.py` writes `reports/latest.md`. The first run produced this:
+`evals/report.py` writes `reports/latest.md`. The split is 22 development, 10 held
+out, and **no document appears in both**. The run produced this:
 
 | configuration | dev recall@5 | held-out recall@5 |
 | --- | --- | --- |
-| lexical | 83% | 56% (CI 27–81%) |
-| fielded | 96% | 56% (CI 27–81%) |
-| dense | 78% | **78%** (CI 45–94%) |
-| hybrid | 96% | 67% (CI 35–88%) |
+| lexical | 82% | 60% (CI 31–83%) |
+| fielded | 91% | 70% (CI 40–89%) |
+| dense | 73% | **90%** (CI 60–98%) |
+| hybrid | 91% | 80% (CI 49–94%) |
 
 Three findings, in order of how uncomfortable they are.
 
-**1. The development numbers were optimistic.** Hybrid looked like 96% on dev and 67%
-on held-out. That is not a bug; it is what tuning on a set does. Every parameter chosen
-in stages 03 and 04 — heading weight, candidate depth, fusion constant — was chosen
-while looking at questions that are now in the dev split.
+**1. The development numbers were optimistic.** Fielded and hybrid both look like 91%
+on dev. On documents the tuning never saw, they are 70% and 80%. That is not a bug; it
+is what tuning on a set does. Every parameter chosen in stages 03 and 04 — heading
+weight, candidate depth, fusion constant — was chosen while looking at questions that
+are in the dev split, on documents that are in the dev split. The gap is 11 points for
+hybrid and 21 for fielded.
 
-**2. The ranking flipped.** On dev, hybrid and fielded tie at 96%. On held-out, dense
-retrieval beats both. If you had stopped at stage 04 and reported "hybrid is best", you
-would have reported a result that does not survive nine unseen questions.
+**2. The ranking flipped.** On dev, dense is the worst configuration at 73%. On
+held-out documents it is the best at 90%. If you had stopped after stage 04 and
+reported "hybrid is best", you would have reported a result that does not survive ten
+questions about documents you never tuned on.
 
 **3. The differences are not distinguishable.** Hybrid versus fielded on held-out: one
 question where hybrid succeeds and fielded fails, zero the other way. Exact McNemar
 p = 1.000. With one discordant question, the honest verdict is "no evidence of a
 difference", not "hybrid wins".
 
-The intervals tell the same story: hybrid 35–88%, dense 45–94%. They overlap almost
-completely. Any claim that one is better is a claim about which nine questions you
-happened to pick.
+The intervals tell the same story: hybrid 49–94%, dense 60–98%. They overlap across
+most of their range. Any claim that one is better is a claim about which ten documents
+you happened to hold out.
+
+**A correction to the split itself.** The first version of this report was run on a
+split made by question, not by document: 23 development, 9 held out, and 5 of the 9
+held-out questions shared documents with development questions. One pair — one dev, one
+held out — were paraphrases with the *same gold phrase*, so tuning on dev tuned the
+exact passage the held-out question was scored against. The split is now
+document-disjoint and every number above was re-measured on it. The finding survived
+the correction: the dev optimism and dense's held-out lead were both visible on the
+contaminated split too, which is the only reason it is safe to report them here. The
+old numbers stay in the git history. A held-out question about a document you tuned on
+was never held out, and no interval fixes that.
 
 **And the power section puts a number on the whole problem.** Detecting a ten-point
-improvement needs about 250 questions per configuration. This report has 9 held out.
+improvement needs about 250 questions per configuration. This report has 10 held out.
 
 ## What this means for the project
 
@@ -95,7 +110,7 @@ someone who has not seen the code. That is unglamorous, and it is what separates
 from a measurement.
 
 This is also the most useful interview answer in the whole project. Anyone can say
-"recall@5 was 83%". Very few people can say "83% on 32 questions has a 20-point
+"recall@5 was 87%". Very few people can say "87.5% on 32 questions has a 23-point
 interval, my held-out number was lower than my dev number because I tuned on dev, and
 I need around 250 questions before I can claim a ten-point improvement".
 
@@ -106,8 +121,8 @@ From `FIELD-NOTES.md`:
 - **LangChain** noted that about twenty curated datapoints is enough to *start*. This
   stage is the rest of that sentence: twenty is enough to start, not enough to conclude.
 - **Oracle** insisted retrieval and generation be evaluated separately. The report
-  separates them, and section 2 shows why: retrieval finds evidence for 6 of 9 held-out
-  questions, but only 2 of those answers contain the evidence, because the stand-in
+  separates them, and section 2 shows why: retrieval finds evidence for 8 of 10 held-out
+  questions, but only 3 of the answers contain that evidence, because the stand-in
   reader picks the wrong sentence. Two different failures, two different fixes.
 - **PostHog** benchmarked agents by varying one thing at a time — model, effort,
   harness. The dev/test columns here are the same discipline: a comparison is only
@@ -156,11 +171,11 @@ just add ten more questions" rarely changes a conclusion.
 ## What a senior would notice
 
 **Whether the dev/test gap is reported.** The single most informative line in the report
-is "96% on dev, 67% held out". A team that hides that line is not doing evaluation; it is
+is "91% on dev, 70% held out". A team that hides that line is not doing evaluation; it is
 doing marketing with extra steps.
 
 **Whether a flipped ranking triggers a rebuild or a shrug.** Dense beating hybrid on
-held-out with nine questions is noise, and the right response is to collect more data,
+held-out with ten questions is noise, and the right response is to collect more data,
 not to switch architectures. The wrong responses are both available: chase the new
 winner, or dismiss the test as unreliable. Only the interval tells you which.
 

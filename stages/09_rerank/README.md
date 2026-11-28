@@ -57,47 +57,48 @@ weights on twenty-three questions is how you build a reranker that works on your
 nowhere else.
 
 **The blend matters.** `weight = 1.0` discards the first stage's opinion and drops hybrid recall
-from 95.7% to 82.6%. `weight = 0.6` keeps enough of it that a chunk fusion was confident about
+from 90.9% to 77.3%. `weight = 0.6` keeps enough of it that a chunk fusion was confident about
 survives a mediocre pair score. At `weight = 0.0` the wrapper is the identity, which is a property
 worth testing rather than hoping for.
 
 ## The measurement
 
-Development split, 23 questions, first stage retrieved to depth 20:
+Development split, 22 questions, first stage retrieved to depth 20:
 
 | first stage | recall@5 | MRR | reranked recall@5 | reranked MRR | MRR gain |
 | --- | --- | --- | --- | --- | --- |
-| dense alone | 78.3% | 0.541 | 82.6% | 0.668 | **+0.128** |
-| lexical alone | 95.7% | 0.701 | 91.3% | 0.725 | **+0.024** |
-| hybrid | 95.7% | 0.732 | 87.0% | 0.741 | **+0.009** |
+| dense alone | 72.7% | 0.505 | 77.3% | 0.638 | **+0.133** |
+| lexical alone | 81.8% | 0.623 | 81.8% | 0.648 | **+0.025** |
+| hybrid | 90.9% | 0.674 | 81.8% | 0.683 | **+0.009** |
 
 **The gain is a function of the first stage, not of the reranker.** A weak first stage leaves a
-lot to repair, and the reranker repairs it: +0.128 MRR on dense. A strong first stage leaves
+lot to repair, and the reranker repairs it: +0.133 MRR on dense. A strong first stage leaves
 almost nothing, and the reranker costs recall while buying one hundredth of an MRR point, because
 the chunks it demotes are the ones fusion got right.
 
 That is the answer to "should we add a reranker", and you can have it before you write any
-reranking code: **look at the first stage's MRR.** At 0.73 on a five-document window, there is
-0.27 of theoretical headroom and almost none of it is reachable by re-ordering.
+reranking code: **look at the first stage's MRR.** At 0.67 on a five-document window, there is
+0.33 of theoretical headroom and almost none of it is reachable by re-ordering.
 
 ### And even the big gain does not survive a test
 
-The +0.128 on dense is a mean over 23 questions. Per question:
+The +0.133 on dense is a mean over 22 questions. Per question:
 
 | first stage | questions improved | worsened | unchanged | sign test |
 | --- | --- | --- | --- | --- |
-| dense | 7 | 3 | 13 | p = 0.34 |
-| hybrid | 3 | 3 | 17 | p = 1.00 |
+| dense | 6 | 2 | 14 | p = 0.29 |
+| hybrid | 3 | 3 | 16 | p = 1.00 |
 
-Seven wins against three losses is not evidence, it is a coin landing seven times out of ten. And
-the held-out split, nine questions, disagrees with the dev split in both directions:
+Six wins against two losses is not evidence, it is a coin landing six times out of eight. And
+the held-out split, ten questions, does not confirm either dev number: dense's gain flips sign,
+hybrid's grows sixfold:
 
 | configuration | dev MRR gain | held-out MRR gain |
 | --- | --- | --- |
-| dense + rerank | +0.128 | **−0.019** |
-| hybrid + rerank | +0.009 | **+0.059** |
+| dense + rerank | +0.133 | **−0.016** |
+| hybrid + rerank | +0.009 | **+0.053** |
 
-One question on nine is eleven points of recall and up to 0.1 of MRR, so neither number means
+One question on ten is ten points of recall and up to 0.1 of MRR, so neither number means
 anything. The honest conclusion is the one the stage ships with: **the mechanism is real and the
 evidence is not sufficient.** Do not put the reranker in the pipeline on this corpus; do keep the
 measurement, because the next corpus will have different headroom.
@@ -114,8 +115,8 @@ re-ordering heuristics. That is the part this stage cannot reproduce offline: ou
 the pair with four lexical counts, so it can only notice what a term-frequency model can notice.
 It is enough to reorder a weak first stage and not enough to beat a strong one.
 
-**In this project.** The stand-in gains 0.128 MRR on the weakest first stage and 0.009 on the
-strongest, and neither gain is significant at n = 23. A real cross-encoder would be measured the
+**In this project.** The stand-in gains 0.133 MRR on the weakest first stage and 0.009 on the
+strongest, and neither gain is significant at n = 22. A real cross-encoder would be measured the
 same way and the eval set would still be the bottleneck. We did not build the transformer, and
 this stage does not claim its numbers transfer.
 
@@ -148,9 +149,9 @@ You should be able to say:
 
 - "A cross-encoder reads the query and the chunk together, which is why it is stronger and 10 to
   100 times more expensive, which is why it only ever sees the first stage's top 20."
-- "Reranking dense gained 0.128 MRR and reranking hybrid gained 0.009, because the gain is the
+- "Reranking dense gained 0.133 MRR and reranking hybrid gained 0.009, because the gain is the
   first stage's headroom and hybrid had already used it up."
-- "Seven wins and three losses on 23 questions is p = 0.34, and the held-out split flips the sign,
+- "Six wins and two losses on 22 questions is p = 0.29, and the held-out split flips the sign,
   so the correct decision here is not to ship it."
 
 ## If you are stuck
@@ -167,15 +168,16 @@ You should be able to say:
 ## What a senior would notice
 
 **The right time to ask is before you build it.** The headroom rule means the decision costs
-nothing: run the first stage, look at MRR, and if it is already above roughly 0.7 on a five-chunk
-window, the reranker has nothing to win. Teams that add one anyway usually measure a small gain on
+nothing: run the first stage, look at MRR, and if it is already in the high 0.6s or better on a
+five-chunk window (hybrid here: 0.674), the reranker has nothing to win — the measured gain was
+nine thousandths of a point. Teams that add one anyway usually measure a small gain on
 dev, ship it, and pay 20 forward passes per query for it.
 
 **A negative result needs the same rigour as a positive one.** This stage reports a gain, then
 tests it, then reports that the test does not support the gain. That is the difference between
 "we measured it and it did not help" and "we did not measure it and it felt better".
 
-**The bottleneck was the eval set, not the reranker.** Twenty-three dev questions cannot resolve
-a hundredth of an MRR point, and nine held-out questions cannot resolve anything. The next
+**The bottleneck was the eval set, not the reranker.** Twenty-two dev questions cannot resolve
+a hundredth of an MRR point, and ten held-out questions cannot resolve anything. The next
 improvement to this pipeline is more labelled questions, not a better second stage — and that is
 the same conclusion stage 07 reached from a different direction.
